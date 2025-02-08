@@ -9,20 +9,20 @@ export const useCarModelStore = defineStore("carModelStore", {
     actions: {
         async addModel(brandId: number, formData: FormData) {
             try {
-                const response = await axios.post<{ data: CarModel }>(`/api/v1/car-models/${brandId}`, formData);
-                return response.data.data;
+                const { data } = await axios.post<{ data: CarModel }>(`/api/v1/car-models/${brandId}`, formData);
+                return data.data;
             } catch (error) {
                 throw error;
             }
         },
         async editModel(id: number, formData: FormData) {
             try {
-                const response = await axios.post(`/api/v1/car-models/${id}`, formData, {
+                const { data } = await axios.post(`/api/v1/car-models/${id}`, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
-                return response.data.data;
+                return data.data;
             } catch (error) {
                 throw error;
             }

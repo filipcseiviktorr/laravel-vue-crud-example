@@ -147,7 +147,6 @@ const deleteCar = async (car) => {
     try {
         await carModelStore.deleteModel(car.id);
         state.value.selectedBrand.car_models = state.value.selectedBrand.car_models.filter(model => model.id !== car.id);
-   console.log(state.value.selectedBrand)
     } catch (error) {
         handleError(error);
     }
@@ -177,20 +176,15 @@ const editCar = (car) => {
     state.value.selectedModel = car;
     state.value.isEditingModel = true;
     state.value.showModelDialog = true;
-    state.value.newModelImage = car.path ? { source: car.path, options: { type: 'remote' } } : null;
+    state.value.newModelImage = car.path ? {source: car.path, options: {type: 'remote'}} : null;
 };
 
 const onFileChange = (fileItems) => {
-    if (fileItems.length === 1) {
-        state.value.newModelImage = fileItems[0].file;
-    } else {
-        state.value.newModelImage = null;
-    }
+    state.value.newModelImage = fileItems.length === 1 ? fileItems[0].file : null;
 };
 </script>
 
 <template>
-
     <div class="flex flex-col items-center min-h-screen p-6 mx-auto">
         <div class="w-full max-w-4xl mb-8 mt-4 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
             <div class="w-full">
@@ -199,9 +193,12 @@ const onFileChange = (fileItems) => {
                           class="w-full border rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 p-2"/>
             </div>
             <div class="flex justify-end space-x-4 mt-4">
-                <Button icon="pi pi-plus" class="rounded-full bg-green-500 shadow-lg text-white p-2" @click="openAddBrandDialog"/>
-                <Button v-if="state.selectedBrand" icon="pi pi-pencil" class="rounded-full bg-blue-500 shadow-lg text-white p-2" @click="openEditBrandDialog"/>
-                <Button v-if="state.selectedBrand" icon="pi pi-trash" class="rounded-full bg-red-500 shadow-lg text-white p-2" @click="deleteBrand"/>
+                <Button icon="pi pi-plus" class="rounded-full bg-green-500 shadow-lg text-white p-2"
+                        @click="openAddBrandDialog"/>
+                <Button v-if="state.selectedBrand" icon="pi pi-pencil"
+                        class="rounded-full bg-blue-500 shadow-lg text-white p-2" @click="openEditBrandDialog"/>
+                <Button v-if="state.selectedBrand" icon="pi pi-trash"
+                        class="rounded-full bg-red-500 shadow-lg text-white p-2" @click="deleteBrand"/>
             </div>
         </div>
 
@@ -217,7 +214,8 @@ const onFileChange = (fileItems) => {
                         <th class="px-6 py-3 bg-blue-600 text-white text-center rounded-tr-lg w-1/3">
                             Actions<span>
                                 <Button v-if="state.selectedBrand" icon="pi pi-plus"
-                                        class="rounded-full bg-green-500 shadow-lg text-white p-2 ml-2" @click="openAddModelDialog"/>
+                                        class="rounded-full bg-green-500 shadow-lg text-white p-2 ml-2"
+                                        @click="openAddModelDialog"/>
                         </span>
                         </th>
                     </tr>
@@ -244,7 +242,6 @@ const onFileChange = (fileItems) => {
                 <template v-slot:bottom/>
             </v-data-table>
         </div>
-
 
         <Dialog :header="state.isEditingBrand ? 'Edit Brand' : 'Add Brand'" v-model:visible="state.showBrandDialog"
                 modal dismissableMask class="max-w-2xl p-4">

@@ -9,24 +9,24 @@ export const useCarBrandStore = defineStore("carBrandStore", {
     actions: {
         async fetchCarBrands() {
             try {
-                const response = await axios.get<{ data: CarBrand[] }>("/api/v1/car-brands");
-                this.brands = response.data.data;
+                const { data } = await axios.get<{ data: CarBrand[] }>("/api/v1/car-brands");
+                this.brands = data.data;
             } catch (error) {
                 throw error;
             }
         },
         async addBrand(name: string) {
             try {
-                const response = await axios.post<{ data: CarBrand }>(`/api/v1/car-brands`, { name });
-                return response.data.data;
+                const { data } = await axios.post<{ data: CarBrand }>("/api/v1/car-brands", { name });
+                return data.data;
             } catch (error) {
                 throw error;
             }
         },
         async editBrand(id: number, name: string) {
             try {
-                const response = await axios.put(`/api/v1/car-brands/${id}`, { name });
-                return response.data.data;
+                const { data } = await axios.put(`/api/v1/car-brands/${id}`, { name });
+                return data.data;
             } catch (error) {
                 throw error;
             }
