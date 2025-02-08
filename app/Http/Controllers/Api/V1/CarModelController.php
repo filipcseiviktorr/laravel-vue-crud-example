@@ -31,6 +31,7 @@ class CarModelController extends Controller
     public function update(CarModelRequest $request, CarModel $carModel, ImageService $imageService): CarModelResource
     {
         $data = $request->validated();
+
         $data['path'] = $imageService->handleImageUpload($request->file('image'), $carModel->path);
         $carModel->update($data);
 

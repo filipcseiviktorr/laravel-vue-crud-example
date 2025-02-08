@@ -30,7 +30,20 @@ class ImageService
     public function handleImageUpload($image, string $existingPath = null): ?string
     {
         if (!$image) {
-            return $existingPath;
+            if ($existingPath) {
+                $this->deleteImage($existingPath);
+            }
+
+            return null;
+        }
+
+        if ($existingPath && Storage::disk('public')->exists($existingPath)) {
+            $existingHash = md5(Storage::disk('public')->get($existingPath));
+            $uploadedHash = md5($image->getContent());
+
+            if ($existingHash === $uploadedHash) {
+                return $existingPath;
+            }
         }
 
         if ($existingPath) {
@@ -51,15 +64,20 @@ class ImageService
             return;
         }
 
-        if (!Storage::disk('public')->delete($path)) {
-            Log::error("Failed to delete image: $path");
-        }
+        try {
+            if (Storage::disk('public')->exists($path) && !Storage::disk('public')->delete($path)) {
+                Log::error("Failed to delete image: $path");
+            }
 
-        $thumbnailPath = $this->getThumbnailPath($path);
-        if (Storage::disk('public')->exists($thumbnailPath)) {
-            Storage::disk('public')->delete($thumbnailPath);
+            $thumbnailPath = $this->getThumbnailPath($path);
+            if (Storage::disk('public')->exists($thumbnailPath) && !Storage::disk('public')->delete($thumbnailPath)) {
+                Log::error("Failed to delete thumbnail: $thumbnailPath");
+            }
+        } catch (Exception $e) {
+            Log::error("Exception when deleting image: " . $e->getMessage());
         }
     }
+
 
     /**
      * @throws Exception

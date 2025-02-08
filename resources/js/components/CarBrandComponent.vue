@@ -6,7 +6,13 @@ import Dropdown from 'primevue/dropdown';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
-import FileUpload from 'primevue/fileupload';
+import vueFilePond from 'vue-filepond';
+import 'filepond/dist/filepond.min.css';
+import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css';
+import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
+import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
+
+const FilePond = vueFilePond(FilePondPluginFileValidateType, FilePondPluginImagePreview);
 
 const carBrandStore = useCarBrandStore();
 const carModelStore = useCarModelStore();
@@ -23,6 +29,7 @@ const state = ref({
     isEditingModel: false,
     itemsPerPage: 5,
     page: 1,
+    newModelImage: null
 });
 
 const filteredCarList = computed(() =>
@@ -52,7 +59,6 @@ watch(() => state.value.selectedBrand, () => {
 const resetFields = () => {
     state.value.brandName = '';
     state.value.modelName = '';
-    state.value.selectedModel = null;
     state.value.errors = [];
 };
 
@@ -121,9 +127,7 @@ const editModel = async () => {
     try {
         const formData = new FormData();
         formData.append('name', state.value.modelName);
-        if (state.value.newModelImage instanceof File) {
-            formData.append('image', state.value.newModelImage);
-        }
+        formData.append('image', state.value.newModelImage);
         formData.append('_method', 'PUT');
 
         const response = await carModelStore.editModel(state.value.selectedModel.id, formData);
@@ -143,6 +147,7 @@ const deleteCar = async (car) => {
     try {
         await carModelStore.deleteModel(car.id);
         state.value.selectedBrand.car_models = state.value.selectedBrand.car_models.filter(model => model.id !== car.id);
+   console.log(state.value.selectedBrand)
     } catch (error) {
         handleError(error);
     }
@@ -164,6 +169,7 @@ const openAddModelDialog = () => {
     resetFields();
     state.value.isEditingModel = false;
     state.value.showModelDialog = true;
+    state.value.newModelImage = null;
 };
 
 const editCar = (car) => {
@@ -171,30 +177,31 @@ const editCar = (car) => {
     state.value.selectedModel = car;
     state.value.isEditingModel = true;
     state.value.showModelDialog = true;
+    state.value.newModelImage = car.path ? { source: car.path, options: { type: 'remote' } } : null;
 };
 
-const onFileSelect = (event) => {
-    if (event.files.length > 0) {
-        state.value.newModelImage = event.files[0];
+const onFileChange = (fileItems) => {
+    if (fileItems.length === 1) {
+        state.value.newModelImage = fileItems[0].file;
+    } else {
+        state.value.newModelImage = null;
     }
 };
 </script>
 
 <template>
+
     <div class="flex flex-col items-center min-h-screen p-6 mx-auto">
         <div class="w-full max-w-4xl mb-8 mt-4 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
             <div class="w-full">
                 <Dropdown v-model="state.selectedBrand" :options="carBrandStore.brands" optionLabel="name"
                           placeholder="Select a Brand"
-                          class="w-full p-dropdown border rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                          class="w-full border rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 p-2"/>
             </div>
-            <div class="flex justify-end space-x-4">
-                <Button icon="pi pi-plus" class="p-button-rounded p-button-success shadow-lg"
-                        @click="openAddBrandDialog"/>
-                <Button v-if="state.selectedBrand" icon="pi pi-pencil" class="p-button-rounded p-button-info shadow-lg"
-                        @click="openEditBrandDialog"/>
-                <Button v-if="state.selectedBrand" icon="pi pi-trash" class="p-button-rounded p-button-danger shadow-lg"
-                        @click="deleteBrand"/>
+            <div class="flex justify-end space-x-4 mt-4">
+                <Button icon="pi pi-plus" class="rounded-full bg-green-500 shadow-lg text-white p-2" @click="openAddBrandDialog"/>
+                <Button v-if="state.selectedBrand" icon="pi pi-pencil" class="rounded-full bg-blue-500 shadow-lg text-white p-2" @click="openEditBrandDialog"/>
+                <Button v-if="state.selectedBrand" icon="pi pi-trash" class="rounded-full bg-red-500 shadow-lg text-white p-2" @click="deleteBrand"/>
             </div>
         </div>
 
@@ -210,7 +217,7 @@ const onFileSelect = (event) => {
                         <th class="px-6 py-3 bg-blue-600 text-white text-center rounded-tr-lg w-1/3">
                             Actions<span>
                                 <Button v-if="state.selectedBrand" icon="pi pi-plus"
-                                        class="p-button-rounded p-button-success ml-2" @click="openAddModelDialog"/>
+                                        class="rounded-full bg-green-500 shadow-lg text-white p-2 ml-2" @click="openAddModelDialog"/>
                         </span>
                         </th>
                     </tr>
@@ -227,9 +234,9 @@ const onFileSelect = (event) => {
                             <img :src="car.path" class="mx-auto rounded"/>
                         </td>
                         <td class="px-6 py-3 text-center w-1/3">
-                            <Button icon="pi pi-pencil" class="p-button-rounded p-button-info mr-2"
+                            <Button icon="pi pi-pencil" class="rounded-full bg-blue-500 shadow-lg text-white p-2 mr-2"
                                     @click="editCar(car)"/>
-                            <Button icon="pi pi-trash" class="p-button-rounded p-button-danger"
+                            <Button icon="pi pi-trash" class="rounded-full bg-red-500 shadow-lg text-white p-2"
                                     @click="deleteCar(car)"/>
                         </td>
                     </tr>
@@ -238,46 +245,47 @@ const onFileSelect = (event) => {
             </v-data-table>
         </div>
 
+
         <Dialog :header="state.isEditingBrand ? 'Edit Brand' : 'Add Brand'" v-model:visible="state.showBrandDialog"
-                modal dismissableMask class="rounded-xl shadow-xl">
-            <div class="p-fluid">
+                modal dismissableMask class="max-w-2xl p-4">
+            <div class="p-fluid space-y-4">
                 <div class="field">
                     <label for="brandName" class="text-lg font-semibold">Brand Name</label>
                     <InputText id="brandName" v-model="state.brandName" placeholder="Max 40 characters"
-                               class="w-full p-inputtext-lg rounded-md border focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                               class="w-full p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"/>
                 </div>
-                <div class="mt-6 flex justify-start">
-                    <Button label="Save" icon="pi pi-check" class="p-button-rounded p-button-primary w-32"
+                <div class="flex justify-start">
+                    <Button label="Save" icon="pi pi-check" class="rounded-full bg-green-500 text-white p-3"
                             @click="state.isEditingBrand ? editBrand() : addBrand()"/>
                 </div>
                 <ul v-if="state.errors.length" class="text-red-500 mt-2 text-sm">
-                    <li>{{ state.errors }}</li>
+                    {{ state.errors }}
                 </ul>
             </div>
         </Dialog>
 
         <Dialog :header="state.isEditingModel ? 'Edit Model' : 'Add Model'" v-model:visible="state.showModelDialog"
-                modal dismissableMask class="rounded-xl shadow-xl">
-            <div class="p-fluid">
+                modal dismissableMask class="rounded-xl shadow-xl p-6">
+            <div class="p-fluid space-y-6">
                 <div class="field">
                     <label for="modelName" class="text-lg font-semibold">Model Name</label>
                     <InputText id="modelName" v-model="state.modelName" placeholder="Max 40 characters"
-                               class="w-full p-inputtext-lg rounded-md border focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                               class="w-full p-2 rounded-md border focus:ring-blue-500"/>
                 </div>
                 <div class="pt-5">
                     <label for="modelImage" class="text-lg font-semibold">Model Image</label>
-                    <FileUpload
+                    <FilePond
+                        :allowMultiple="false"
                         :maxFileSize="2000000"
-                        mode="basic"
-                        name="image"
-                        accept="image/*"
-                        @select="onFileSelect"
-                        customUpload
-                        class="rounded-md shadow-md"
+                        :acceptedFileTypes="['image/*']"
+                        ref="pond"
+                        class=""
+                        :files="state.selectedModel?.path ? [{ source: state.selectedModel.path, options: { type: 'remote' } }] : []"
+                        @updatefiles="onFileChange"
                     />
                 </div>
                 <div class="mt-6 flex justify-start">
-                    <Button label="Save" icon="pi pi-check" class="p-button-rounded p-button-primary w-32"
+                    <Button label="Save" icon="pi pi-check" class="rounded-full bg-green-500 text-white p-2"
                             @click="state.isEditingModel ? editModel() : addModel()"/>
                 </div>
                 <ul v-if="state.errors.length" class="text-red-500 mt-2 text-sm">
@@ -287,9 +295,3 @@ const onFileSelect = (event) => {
         </Dialog>
     </div>
 </template>
-
-<style>
-.p-button-icon-left.pi.pi-plus::before {
-    content: "\e930";
-}
-</style>
