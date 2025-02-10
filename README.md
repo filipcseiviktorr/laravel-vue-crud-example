@@ -1,5 +1,3 @@
-Here is the formatted version of the instructions:
-
 1. Copy the example environment file to create your own configuration:
    ```sh
    cp .env.example .env
