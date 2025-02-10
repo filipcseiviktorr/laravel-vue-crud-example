@@ -25,7 +25,6 @@ class CarSeeder extends Seeder
             foreach ($models as $model) {
                 CarModel::firstOrCreate(
                     ['car_brand_id' => $carBrand->id, 'name' => $model],
-                    ['path' => 'cars/' . strtolower(str_replace(' ', '-', $model) . '.jpg')]
                 );
             }
         }
