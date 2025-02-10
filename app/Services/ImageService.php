@@ -30,32 +30,17 @@ class ImageService
     public function handleImageUpload($image, string $existingPath = null): ?string
     {
         if (!$image) {
-            if ($existingPath) {
-                $this->deleteImage($existingPath);
-            }
-
+            $this->deleteImageIfExists($existingPath);
             return null;
         }
 
-        if ($existingPath && Storage::disk('public')->exists($existingPath)) {
-            $existingHash = md5(Storage::disk('public')->get($existingPath));
-            $uploadedHash = md5($image->getContent());
-
-            if ($existingHash === $uploadedHash) {
-                return $existingPath;
-            }
+        if ($this->isSameImage($image, $existingPath)) {
+            return $existingPath;
         }
 
-        if ($existingPath) {
-            $this->deleteImage($existingPath);
-        }
+        $this->deleteImageIfExists($existingPath);
 
-        try {
-            return $image->store($this->carModelsDir, 'public');
-        } catch (Exception $e) {
-            Log::error("Failed to upload image: " . $e->getMessage());
-            throw new Exception("Failed to upload image", 0, $e);
-        }
+        return $this->storeImage($image);
     }
 
     public function deleteImage(string $path): void
@@ -65,26 +50,19 @@ class ImageService
         }
 
         try {
-            if (Storage::disk('public')->exists($path) && !Storage::disk('public')->delete($path)) {
-                Log::error("Failed to delete image: $path");
-            }
-
-            $thumbnailPath = $this->getThumbnailPath($path);
-            if (Storage::disk('public')->exists($thumbnailPath) && !Storage::disk('public')->delete($thumbnailPath)) {
-                Log::error("Failed to delete thumbnail: $thumbnailPath");
-            }
+            $this->deleteFile($path);
+            $this->deleteFile($this->getThumbnailPath($path));
         } catch (Exception $e) {
             Log::error("Exception when deleting image: " . $e->getMessage());
         }
     }
-
 
     /**
      * @throws Exception
      */
     public function getThumbnailImageUrl(string $path): string
     {
-        return $this->getImageUrlInternal($path, true);
+        return $this->retrieveImageUrl($path, true);
     }
 
     /**
@@ -92,10 +70,13 @@ class ImageService
      */
     public function getImageUrl(string $path): string
     {
-        return $this->getImageUrlInternal($path);
+        return $this->retrieveImageUrl($path);
     }
 
-    private function getImageUrlInternal(string $path, bool $isThumbnail = false): string
+    /**
+     * @throws Exception
+     */
+    private function retrieveImageUrl(string $path, bool $isThumbnail = false): string
     {
         if (!$this->imageExists($path)) {
             Log::error("Image does not exist: $path");
@@ -104,14 +85,7 @@ class ImageService
 
         try {
             if ($isThumbnail) {
-                File::ensureDirectoryExists(Storage::disk('public')->path($this->thumbnailsDir));
-
-                $thumbnailPath = $this->getThumbnailPath($path);
-                if (!$this->imageExists($thumbnailPath)) {
-                    $this->createThumbnail($path, $thumbnailPath);
-                }
-
-                return Storage::disk('public')->url($thumbnailPath);
+                return $this->retrieveThumbnailUrl($path);
             } else {
                 return Storage::disk('public')->url($path);
             }
@@ -121,26 +95,46 @@ class ImageService
         }
     }
 
-    private function getThumbnailPath(string $path): string
+    /**
+     * @throws Exception
+     */
+    public function retrieveThumbnailUrl(string $path): string
     {
-        return "{$this->thumbnailsDir}/{$this->thumbnailPrefix}" . basename($path);
+        File::ensureDirectoryExists(Storage::disk('public')->path($this->thumbnailsDir));
+
+        $thumbnailPath = $this->getThumbnailPath($path);
+        if (!$this->imageExists($thumbnailPath)) {
+            $this->createThumbnail($path, $thumbnailPath);
+        }
+
+        return Storage::disk('public')->url($thumbnailPath);
     }
 
-    private function imageExists(string $path): bool
+    public function getThumbnailPath(string $path): string
     {
-        return Storage::disk('public')->exists($path);
+        return "{$this->thumbnailsDir}/{$this->thumbnailPrefix}" . basename($path);
     }
 
     /**
      * @throws Exception
      */
-    private function createThumbnail(string $originalImagePath, string $thumbnailImagePath): void
+    public function createThumbnail(string $originalImagePath, string $thumbnailImagePath): void
     {
         try {
             $manager = new ImageManager(new Driver());
             $imageContent = Storage::disk('public')->get($originalImagePath);
             $image = $manager->read($imageContent);
-            $image->contain($this->thumbnailScale, $this->thumbnailScale);
+
+            $width = $image->width();
+            $height = $image->height();
+
+            if ($width > $height) {
+                // Landscape
+                $image->contain($this->thumbnailScale, intval($this->thumbnailScale * $height / $width));
+            } else {
+                // Portrait
+                $image->contain(intval($this->thumbnailScale * $width / $height), $this->thumbnailScale);
+            }
             $image->save(Storage::disk('public')->path($thumbnailImagePath));
         } catch (Exception $e) {
             Log::error("Failed to create thumbnail: " . $e->getMessage());
@@ -148,9 +142,44 @@ class ImageService
         }
     }
 
-    private function isValidImage($image): bool
+    private function deleteImageIfExists(?string $path): void
     {
-        $validMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        return in_array($image->getClientMimeType(), $validMimeTypes);
+        if ($path) {
+            $this->deleteImage($path);
+        }
+    }
+
+    private function isSameImage($image, ?string $existingPath): bool
+    {
+        if ($existingPath && Storage::disk('public')->exists($existingPath)) {
+            $existingHash = md5(Storage::disk('public')->get($existingPath));
+            $uploadedHash = md5($image->getContent());
+
+            return $existingHash === $uploadedHash;
+        }
+
+        return false;
+    }
+
+    private function storeImage($image): string
+    {
+        try {
+            return $image->store($this->carModelsDir, 'public');
+        } catch (Exception $e) {
+            Log::error("Failed to upload image: " . $e->getMessage());
+            throw new Exception("Failed to upload image", 0, $e);
+        }
+    }
+
+    private function imageExists(string $path): bool
+    {
+        return Storage::disk('public')->exists($path);
+    }
+
+    private function deleteFile(string $path): void
+    {
+        if (Storage::disk('public')->exists($path) && !Storage::disk('public')->delete($path)) {
+            Log::error("Failed to delete file: $path");
+        }
     }
 }

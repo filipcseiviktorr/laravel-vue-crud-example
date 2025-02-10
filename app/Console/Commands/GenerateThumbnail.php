@@ -3,37 +3,29 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use App\Services\ImageService;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
 
 class GenerateThumbnail extends Command
 {
-    protected $signature = 'generate:thumbnail {originalImagePath} {thumbnailImagePath}';
-    protected $description = 'Generate a thumbnail for the given image';
+    protected $signature = 'image:generate-thumbnail {path}';
+    protected $description = 'Generate a thumbnail for the given image path';
 
-    public function handle(): void
+    public function handle(ImageService $imageService): void
     {
-        $originalImagePath = $this->argument('originalImagePath');
-        $thumbnailImagePath = $this->argument('thumbnailImagePath');
-        $thumbnailDir = dirname($thumbnailImagePath);
+        $path = $this->argument('path');
 
-        if (!Storage::disk('public')->exists($originalImagePath)) {
-            $this->error("Original image does not exist: $originalImagePath");
+        if (!Storage::disk('public')->exists($path)) {
+            $this->error("Image does not exist at path: $path");
             return;
         }
 
-        if (!Storage::disk('public')->exists($thumbnailDir)) {
-            Storage::disk('public')->makeDirectory($thumbnailDir);
+        try {
+            $thumbnailPath = $imageService->getThumbnailPath($path);
+            $imageService->createThumbnail($path, $thumbnailPath);
+            $this->info("Thumbnail generated at: $thumbnailPath");
+        } catch (\Exception $e) {
+            $this->error("Failed to generate thumbnail: " . $e->getMessage());
         }
-
-        $manager = new ImageManager(new Driver());
-        $imageContent = Storage::disk('public')->get($originalImagePath);
-        $image = $manager->read($imageContent);
-        $image->scale(300);
-
-        $image->save(Storage::disk('public')->path($thumbnailImagePath));
-
-        $this->info("Thumbnail generated: $thumbnailImagePath");
     }
 }
