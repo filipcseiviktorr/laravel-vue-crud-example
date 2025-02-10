@@ -2,12 +2,12 @@
     <Dialog :header="isEditingBrand ? 'Edit Brand' : 'Add Brand'" v-model:visible="localShowBrandDialog"
             modal dismissableMask class="max-w-2xl p-4">
         <div class="p-fluid space-y-4">
-            <div class="field">
+            <div class="field pt-5">
                 <label for="brandName" class="text-lg font-semibold">Brand Name</label>
                 <InputText id="brandName" v-model="localBrandName" placeholder="Max 40 characters"
-                           class="w-full p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                           class="w-full p-2 rounded-md border focus:ring-blue-500"/>
             </div>
-            <div class="flex justify-start">
+            <div class="flex justify-start pt-5">
                 <Button label="Save" icon="pi pi-check" class="rounded-full bg-green-500 text-white p-3"
                         @click="isEditingBrand ? editBrand() : addBrand()"/>
             </div>
