@@ -17,21 +17,8 @@ class CarModelResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'path' => $this->getImageUrl(),
+            'path' => $this->path ? app(ImageService::class)->getImageUrl($this->path) : null,
+            'thumbnail_path' => $this->path ? app(ImageService::class)->getThumbnailImageUrl($this->path) : null
         ];
-    }
-
-    private function getImageUrl(): ?string
-    {
-        if (!$this->path) {
-            return null;
-        }
-
-        try {
-            return app(ImageService::class)->getImageUrl($this->path);
-        } catch (Exception $e) {
-            Log::error("Failed to get image URL for path {$this->path}: " . $e->getMessage());
-            return null;
-        }
     }
 }

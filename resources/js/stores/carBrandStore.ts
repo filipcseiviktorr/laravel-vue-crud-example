@@ -7,7 +7,7 @@ export const useCarBrandStore = defineStore("carBrandStore", {
         brands: [] as CarBrand[],
     }),
     actions: {
-        async fetchCarBrands() {
+        async index() {
             try {
                 const { data } = await axios.get<{ data: CarBrand[] }>("/api/v1/car-brands");
                 this.brands = data.data;
@@ -15,7 +15,7 @@ export const useCarBrandStore = defineStore("carBrandStore", {
                 throw error;
             }
         },
-        async addBrand(name: string) {
+        async store(name: string) {
             try {
                 const { data } = await axios.post<{ data: CarBrand }>("/api/v1/car-brands", { name });
                 return data.data;
@@ -23,7 +23,7 @@ export const useCarBrandStore = defineStore("carBrandStore", {
                 throw error;
             }
         },
-        async editBrand(id: number, name: string) {
+        async edit(id: number, name: string) {
             try {
                 const { data } = await axios.put(`/api/v1/car-brands/${id}`, { name });
                 return data.data;
@@ -31,7 +31,7 @@ export const useCarBrandStore = defineStore("carBrandStore", {
                 throw error;
             }
         },
-        async deleteBrand(id: number) {
+        async delete(id: number) {
             try {
                 await axios.delete(`/api/v1/car-brands/${id}`);
             } catch (error) {

@@ -82,7 +82,20 @@ class ImageService
     /**
      * @throws Exception
      */
+    public function getThumbnailImageUrl(string $path): string
+    {
+        return $this->getImageUrlInternal($path, true);
+    }
+
+    /**
+     * @throws Exception
+     */
     public function getImageUrl(string $path): string
+    {
+        return $this->getImageUrlInternal($path);
+    }
+
+    private function getImageUrlInternal(string $path, bool $isThumbnail = false): string
     {
         if (!$this->imageExists($path)) {
             Log::error("Image does not exist: $path");
@@ -90,14 +103,18 @@ class ImageService
         }
 
         try {
-            File::ensureDirectoryExists(Storage::disk('public')->path($this->thumbnailsDir));
+            if ($isThumbnail) {
+                File::ensureDirectoryExists(Storage::disk('public')->path($this->thumbnailsDir));
 
-            $thumbnailPath = $this->getThumbnailPath($path);
-            if (!$this->imageExists($thumbnailPath)) {
-                $this->createThumbnail($path, $thumbnailPath);
+                $thumbnailPath = $this->getThumbnailPath($path);
+                if (!$this->imageExists($thumbnailPath)) {
+                    $this->createThumbnail($path, $thumbnailPath);
+                }
+
+                return Storage::disk('public')->url($thumbnailPath);
+            } else {
+                return Storage::disk('public')->url($path);
             }
-
-            return Storage::disk('public')->url($thumbnailPath);
         } catch (Exception $e) {
             Log::error("Failed to get image URL: " . $e->getMessage());
             throw new Exception("Failed to get image URL", 0, $e);

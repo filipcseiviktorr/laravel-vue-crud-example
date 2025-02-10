@@ -14,7 +14,9 @@ class CarBrandResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'car_models' => CarModelResource::collection($this->whenLoaded('carModels')) ?? [],
+            'car_models' => $this->whenLoaded('carModels', function () {
+                return $this->carModels->isNotEmpty() ? CarModelResource::collection($this->carModels->sortByDesc('id')) : [];
+            }),
         ];
     }
 }

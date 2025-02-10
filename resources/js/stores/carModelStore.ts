@@ -7,7 +7,7 @@ export const useCarModelStore = defineStore("carModelStore", {
         models: [] as CarModel[],
     }),
     actions: {
-        async addModel(brandId: number, formData: FormData) {
+        async store(brandId: number, formData: FormData) {
             try {
                 const { data } = await axios.post<{ data: CarModel }>(`/api/v1/car-models/${brandId}`, formData);
                 return data.data;
@@ -15,7 +15,7 @@ export const useCarModelStore = defineStore("carModelStore", {
                 throw error;
             }
         },
-        async editModel(id: number, formData: FormData) {
+        async edit(id: number, formData: FormData) {
             try {
                 const { data } = await axios.post(`/api/v1/car-models/${id}`, formData, {
                     headers: {
@@ -27,7 +27,7 @@ export const useCarModelStore = defineStore("carModelStore", {
                 throw error;
             }
         },
-        async deleteModel(id: number) {
+        async delete(id: number) {
             try {
                 await axios.delete(`/api/v1/car-models/${id}`);
             } catch (error) {

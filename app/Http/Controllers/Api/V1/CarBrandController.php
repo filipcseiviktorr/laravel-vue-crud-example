@@ -13,7 +13,9 @@ class CarBrandController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
-        return CarBrandResource::collection(CarBrand::with('carModels')->get());
+        return CarBrandResource::collection(
+            CarBrand::with(['carModels'])->orderByDesc('id')->get()
+        );
     }
 
     public function store(CarBrandRequest $request): CarBrandResource
