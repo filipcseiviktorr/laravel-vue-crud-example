@@ -51,7 +51,7 @@
    ```
 
 10. Access the application:
-    - Backend: [http://localhost](http://localhost)
+    - [http://localhost](http://localhost)
 
 11. Access the database:
     - phpMyAdmin: [http://localhost:8080](http://localhost:8080)
