@@ -15,6 +15,7 @@ export const useCarBrandStore = defineStore('carBrandStore', {
                 throw error
             }
         },
+
         async store(name: string) {
             try {
                 const { data } = await axios.post<{ data: CarBrand }>('/api/v1/car-brands', {
