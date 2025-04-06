@@ -1,6 +1,6 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router'
 
-import home from '../components/CarBrandComponent.vue';
+import home from '../components/CarBrandComponent.vue'
 
 const routes = [
     {
@@ -11,11 +11,11 @@ const routes = [
         path: '/:pathMatch(.*)*',
         redirect: '/',
     },
-];
+]
 
 const router = createRouter({
     history: createWebHistory(),
     routes,
-});
+})
 
-export default router;
+export default router

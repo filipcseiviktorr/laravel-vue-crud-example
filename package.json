@@ -11,11 +11,16 @@
         "prepare": "husky install"
     },
     "lint-staged": {
-        "src/**/*.{js,ts,vue}": [
-            "prettier --write",
-            "eslint --fix"
+        "*.js": [
+            "eslint --fix",
+            "prettier --write"
         ],
-        "*.css": [
+        "*.vue": [
+            "eslint --fix",
+            "prettier --write"
+        ],
+        "*.ts": [
+            "eslint --fix",
             "prettier --write"
         ]
     },
