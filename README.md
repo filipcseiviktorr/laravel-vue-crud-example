@@ -1,51 +1,74 @@
-1. Ensure you have the following versions installed:
-    - Laravel: ^11.31
-    - Node.js: ^18.0.0
-    - PHP: ^8.2
+# Laravel-Vue CRUD Example
 
-2. Copy the example environment file to create your own configuration:
+## Requirements
+- Docker and Docker Compose installed on your machine.
+
+## Setup Instructions
+
+1. Copy the example environment file to create your own configuration:
    ```sh
    cp .env.example .env
    ```
 
-3. Install the necessary PHP dependencies using Composer:
+2. Start the containers:
    ```sh
-   composer install
+   docker-compose up -d
+   ```
+
+3. Install PHP dependencies inside the container:
+   ```sh
+   docker exec -it laravel_vue_app composer install
    ```
 
 4. Generate a new application key:
    ```sh
-   php artisan key:generate
+   docker exec -it laravel_vue_app php artisan key:generate
    ```
 
-5. Create a new database in MySQL named 'crud'.
-
-6. Run the database migrations to set up the tables:
+5. Run the database migrations to set up the tables:
    ```sh
-   php artisan migrate
+   docker exec -it laravel_vue_app php artisan migrate
    ```
 
-7. Seed the database with initial data:
+6. Seed the database with initial data:
    ```sh
-   php artisan db:seed
+   docker exec -it laravel_vue_app php artisan db:seed
    ```
 
-8. Create a symlink to the storage directory:
+7. Create a symlink to the storage directory:
    ```sh
-   php artisan storage:link
+   docker exec -it laravel_vue_app php artisan storage:link
    ```
 
-9. Install the necessary JavaScript dependencies using npm:
+8. Install JavaScript dependencies inside the container:
    ```sh
    npm install
    ```
 
-10. Compile the assets for development:
-    ```sh
-    npm run dev
-    ```
+9. Compile the assets for development:
+   ```sh
+   npm run dev
+   ```
 
-11. Start the development server:
-    ```sh
-    php artisan serve
-    ```
+10. Access the application:
+    - [http://localhost](http://localhost)
+
+11. Access the database:
+    - phpMyAdmin: [http://localhost:8080](http://localhost:8080)
+
+## Useful Commands
+
+- Stop the containers:
+  ```sh
+  docker-compose down
+  ```
+
+- Restart the containers:
+  ```sh
+  docker-compose restart
+  ```
+
+- Access the application container:
+  ```sh
+  docker exec -it laravel_vue_app bash
+  ```
