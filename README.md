@@ -40,9 +40,9 @@
    docker exec -it laravel_vue_app php artisan storage:link
    ```
 
-8. Install JavaScript dependencies inside the container:
+8. Install JavaScript dependencies outside the container:
    ```sh
-   npm install
+    npm install
    ```
 
 9. Compile the assets for development:
@@ -51,24 +51,27 @@
    ```
 
 10. Access the application:
-    - [http://localhost](http://localhost)
+    - Backend: [http://localhost](http://localhost)
 
 11. Access the database:
     - phpMyAdmin: [http://localhost:8080](http://localhost:8080)
 
-## Useful Commands
+## Code Quality Tools
 
-- Stop the containers:
-  ```sh
-  docker-compose down
-  ```
+### Prettier
+Prettier is used to format the codebase. To format all files, run:
+```sh
+npm run prettier
+```
 
-- Restart the containers:
-  ```sh
-  docker-compose restart
-  ```
+### ESLint
+ESLint is used to lint and fix JavaScript/TypeScript/Vue files. To lint and fix issues, run:
+```sh
+npm run lint
+```
 
-- Access the application container:
-  ```sh
-  docker exec -it laravel_vue_app bash
-  ```
+### Pre-commit Hook
+Husky and lint-staged are configured to run Prettier and ESLint automatically before committing changes. To set up Husky, run:
+```sh
+npx husky-init
+```

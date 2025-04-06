@@ -38,6 +38,7 @@
     "devDependencies": {
         "@types/jquery": "^3.5.32",
         "@vitejs/plugin-vue": "^5.2.1",
+        "@vue/eslint-config-prettier": "^10.2.0",
         "autoprefixer": "^10.4.20",
         "axios": "^1.7.9",
         "concurrently": "^9.0.1",
